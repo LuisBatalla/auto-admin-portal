@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,8 +9,18 @@ import {
   FileText,
   UserCircle,
   Plus,
+  LogOut,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [vehicles, setVehicles] = useState([
@@ -24,6 +35,30 @@ const Index = () => {
     { title: "Clientes Totales", value: "45", icon: UserCircle },
   ];
 
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión exitosamente",
+      });
+      
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al cerrar sesión",
+        description: error.message,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <motion.div
@@ -32,11 +67,30 @@ const Index = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Taller Automotriz
-          </h1>
-          <p className="text-gray-600">Sistema de Gestión</p>
+        <header className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Taller Automotriz
+            </h1>
+            <p className="text-gray-600">Sistema de Gestión</p>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <UserCircle className="h-4 w-4" />
+                  {user?.email}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Cerrar Sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
