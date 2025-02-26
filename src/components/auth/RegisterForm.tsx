@@ -44,9 +44,9 @@ export const RegisterForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md p-6 space-y-4">
+    <Card className="w-full p-6 space-y-4 bg-white shadow-md">
       <div className="space-y-2 text-center">
-        <h2 className="text-2xl font-bold">Crear Cuenta</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Crear Cuenta</h2>
         <p className="text-gray-500">Registra tus datos para comenzar</p>
       </div>
       <form onSubmit={handleRegister} className="space-y-4">
@@ -57,6 +57,7 @@ export const RegisterForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="w-full"
           />
         </div>
         <div className="space-y-2">
@@ -66,6 +67,7 @@ export const RegisterForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="w-full"
           />
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
