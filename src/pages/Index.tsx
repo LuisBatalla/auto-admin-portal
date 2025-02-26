@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   UserCircle,
   Plus,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
@@ -27,6 +28,7 @@ const Index = () => {
     { id: 1, brand: "Toyota", model: "Corolla", plate: "ABC123", status: "En progreso" },
     { id: 2, brand: "Honda", model: "Civic", plate: "XYZ789", status: "Pendiente" },
   ]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const stats = [
     { title: "Vehículos Activos", value: "12", icon: CarFront },
@@ -38,6 +40,27 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user?.id)
+          .single();
+        
+        if (error) throw error;
+        setIsAdmin(data?.role === 'admin');
+      } catch (error: any) {
+        console.error('Error checking admin role:', error.message);
+      }
+    };
+
+    if (user) {
+      checkAdminRole();
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -79,8 +102,13 @@ const Index = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
-                  <UserCircle className="h-4 w-4" />
+                  {isAdmin ? (
+                    <Shield className="h-4 w-4 text-primary" />
+                  ) : (
+                    <UserCircle className="h-4 w-4" />
+                  )}
                   {user?.email}
+                  {isAdmin && <span className="ml-2 text-xs text-primary">(Admin)</span>}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
