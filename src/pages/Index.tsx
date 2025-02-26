@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -64,16 +63,14 @@ const Index = () => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
+      await supabase.auth.signOut();
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión exitosamente",
       });
-      
       navigate("/login");
     } catch (error: any) {
+      console.error('Error during logout:', error);
       toast({
         variant: "destructive",
         title: "Error al cerrar sesión",
