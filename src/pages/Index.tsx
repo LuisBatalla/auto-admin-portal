@@ -22,24 +22,89 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+
+interface Vehicle {
+  id: string;
+  brand: string;
+  model: string;
+  plate: string;
+  year: number | null;
+}
+
+interface WorkOrder {
+  id: string;
+  vehicle_id: string;
+  description: string;
+  status: string;
+  total_cost: number | null;
+}
 
 const Index = () => {
-  const [vehicles, setVehicles] = useState([
-    { id: 1, brand: "Toyota", model: "Corolla", plate: "ABC123", status: "En progreso" },
-    { id: 2, brand: "Honda", model: "Civic", plate: "XYZ789", status: "Pendiente" },
-  ]);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  const stats = [
-    { title: "Vehículos Activos", value: "12", icon: CarFront },
-    { title: "Órdenes Pendientes", value: "5", icon: Wrench },
-    { title: "Facturas del Mes", value: "28", icon: FileText },
-    { title: "Clientes Totales", value: "45", icon: UserCircle },
-  ];
-
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching vehicles:', error);
+        throw error;
+      }
+      
+      return data as Vehicle[];
+    },
+  });
+
+  const { data: workOrders = [], isLoading: isLoadingOrders } = useQuery({
+    queryKey: ['workOrders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('work_orders')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching work orders:', error);
+        throw error;
+      }
+      
+      return data as WorkOrder[];
+    },
+  });
+
+  const stats = [
+    { 
+      title: "Vehículos Activos", 
+      value: vehicles.length.toString(), 
+      icon: CarFront 
+    },
+    { 
+      title: "Órdenes Pendientes", 
+      value: workOrders.filter(order => order.status === 'pending').length.toString(), 
+      icon: Wrench 
+    },
+    { 
+      title: "Facturas del Mes", 
+      value: workOrders.filter(order => {
+        const orderDate = new Date(order.created_at);
+        const currentDate = new Date();
+        return orderDate.getMonth() === currentDate.getMonth() &&
+               orderDate.getFullYear() === currentDate.getFullYear();
+      }).length.toString(), 
+      icon: FileText 
+    },
+    { 
+      title: "Total Facturado", 
+      value: `$${workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0).toFixed(2)}`, 
+      icon: UserCircle 
+    },
+  ];
 
   useEffect(() => {
     const checkAdminRole = async () => {
@@ -79,7 +144,6 @@ const Index = () => {
         title: "Sesión cerrada",
         description: "Has cerrado sesión exitosamente",
       });
-      // Esperar un momento antes de navegar
       setTimeout(() => {
         navigate("/login");
       }, 100);
@@ -92,6 +156,22 @@ const Index = () => {
       });
     }
   };
+
+  const handleAddVehicle = () => {
+    // TODO: Implementar formulario para agregar vehículo
+    toast({
+      title: "Próximamente",
+      description: "La función de agregar vehículos estará disponible pronto",
+    });
+  };
+
+  if (isLoadingVehicles || isLoadingOrders) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -161,7 +241,10 @@ const Index = () => {
           <h2 className="text-2xl font-semibold text-gray-900">
             Vehículos en Taller
           </h2>
-          <Button className="flex items-center space-x-2">
+          <Button 
+            className="flex items-center space-x-2"
+            onClick={handleAddVehicle}
+          >
             <Plus className="h-4 w-4" />
             <span>Nuevo Vehículo</span>
           </Button>
@@ -182,9 +265,12 @@ const Index = () => {
                       {vehicle.brand} {vehicle.model}
                     </h3>
                     <p className="text-gray-600">{vehicle.plate}</p>
+                    {vehicle.year && (
+                      <p className="text-sm text-gray-500">Año: {vehicle.year}</p>
+                    )}
                   </div>
                   <span className="px-3 py-1 rounded-full text-sm bg-primary/10 text-primary">
-                    {vehicle.status}
+                    {workOrders.find(order => order.vehicle_id === vehicle.id)?.status || 'Sin órdenes'}
                   </span>
                 </div>
                 <div className="flex justify-end space-x-2">
