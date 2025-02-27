@@ -9,7 +9,101 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          brand: string
+          created_at: string | null
+          id: string
+          model: string
+          owner_id: string | null
+          plate: string
+          updated_at: string | null
+          year: number | null
+        }
+        Insert: {
+          brand: string
+          created_at?: string | null
+          id?: string
+          model: string
+          owner_id?: string | null
+          plate: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Update: {
+          brand?: string
+          created_at?: string | null
+          id?: string
+          model?: string
+          owner_id?: string | null
+          plate?: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      work_orders: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          description: string
+          id: string
+          status: string
+          total_cost: number | null
+          updated_at: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          status?: string
+          total_cost?: number | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          status?: string
+          total_cost?: number | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +112,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
