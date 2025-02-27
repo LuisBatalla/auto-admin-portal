@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import {
   Shield,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import {
   DropdownMenu,
@@ -63,14 +64,27 @@ const Index = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error during logout:', error);
+        toast({
+          variant: "destructive",
+          title: "Error al cerrar sesión",
+          description: error.message,
+        });
+        return;
+      }
+      
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión exitosamente",
       });
-      navigate("/login");
+      // Esperar un momento antes de navegar
+      setTimeout(() => {
+        navigate("/login");
+      }, 100);
     } catch (error: any) {
-      console.error('Error during logout:', error);
+      console.error('Error durante el cierre de sesión:', error);
       toast({
         variant: "destructive",
         title: "Error al cerrar sesión",
