@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface VehicleFormProps {
   onClose: () => void;
@@ -15,6 +16,7 @@ interface VehicleFormProps {
 export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     brand: "",
     model: "",
@@ -24,6 +26,15 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes iniciar sesión para agregar vehículos",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -35,6 +46,7 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
             model: formData.model,
             plate: formData.plate.toUpperCase(),
             year: formData.year ? parseInt(formData.year) : null,
+            owner_id: user.id,
           }
         ]);
 
