@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -38,6 +37,9 @@ interface WorkOrder {
   description: string;
   status: string;
   total_cost: number | null;
+  created_at: string;
+  completed_at: string | null;
+  updated_at: string | null;
 }
 
 const Index = () => {
@@ -158,7 +160,6 @@ const Index = () => {
   };
 
   const handleAddVehicle = () => {
-    // TODO: Implementar formulario para agregar vehículo
     toast({
       title: "Próximamente",
       description: "La función de agregar vehículos estará disponible pronto",
