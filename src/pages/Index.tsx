@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -21,7 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { VehicleForm } from "@/components/VehicleForm";
 
 interface Vehicle {
   id: string;
@@ -44,9 +46,11 @@ interface WorkOrder {
 
 const Index = () => {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showVehicleForm, setShowVehicleForm] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['vehicles'],
@@ -160,10 +164,11 @@ const Index = () => {
   };
 
   const handleAddVehicle = () => {
-    toast({
-      title: "Próximamente",
-      description: "La función de agregar vehículos estará disponible pronto",
-    });
+    setShowVehicleForm(true);
+  };
+
+  const handleVehicleAdded = () => {
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
 
   if (isLoadingVehicles || isLoadingOrders) {
@@ -250,6 +255,15 @@ const Index = () => {
             <span>Nuevo Vehículo</span>
           </Button>
         </div>
+
+        {showVehicleForm && (
+          <div className="mb-6">
+            <VehicleForm 
+              onClose={() => setShowVehicleForm(false)}
+              onSuccess={handleVehicleAdded}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicles.map((vehicle, index) => (
