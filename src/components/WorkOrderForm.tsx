@@ -40,20 +40,8 @@ export const WorkOrderForm = ({ vehicleId, onClose, onSuccess }: WorkOrderFormPr
     console.log("Intentando agregar orden para el vehículo:", vehicleId);
 
     try {
-      // Verificar si el vehículo pertenece al usuario actual
-      const { data: vehicleCheck, error: vehicleError } = await supabase
-        .from('vehicles')
-        .select('id')
-        .eq('id', vehicleId)
-        .eq('owner_id', user.id)
-        .single();
-      
-      if (vehicleError) {
-        console.error("Error al verificar propiedad del vehículo:", vehicleError);
-        throw new Error("No tienes permiso para agregar órdenes a este vehículo");
-      }
-
-      // Insertar la orden de trabajo
+      // Insertar la orden de trabajo directamente
+      // Las políticas RLS ya validarán si el usuario tiene permiso para este vehículo
       const { data, error } = await supabase
         .from('work_orders')
         .insert([
@@ -80,10 +68,22 @@ export const WorkOrderForm = ({ vehicleId, onClose, onSuccess }: WorkOrderFormPr
       onSuccess();
     } catch (error: any) {
       console.error("Error completo:", error);
+      
+      let errorMessage = "Error desconocido";
+      
+      // Personalizar mensajes de error según el código
+      if (error.code === "42501") {
+        errorMessage = "No tienes permiso para agregar órdenes a este vehículo";
+      } else if (error.code === "23503") {
+        errorMessage = "El vehículo seleccionado no existe";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: `No se pudo agregar la orden: ${error.message || 'Error desconocido'}`,
+        description: `No se pudo agregar la orden: ${errorMessage}`,
       });
     } finally {
       setIsLoading(false);
