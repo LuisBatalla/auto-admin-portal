@@ -40,13 +40,27 @@ export const WorkOrderForm = ({ vehicleId, onClose, onSuccess }: WorkOrderFormPr
     console.log("Intentando agregar orden para el vehículo:", vehicleId);
 
     try {
+      // Verificar si el vehículo pertenece al usuario actual
+      const { data: vehicleCheck, error: vehicleError } = await supabase
+        .from('vehicles')
+        .select('id')
+        .eq('id', vehicleId)
+        .eq('owner_id', user.id)
+        .single();
+      
+      if (vehicleError) {
+        console.error("Error al verificar propiedad del vehículo:", vehicleError);
+        throw new Error("No tienes permiso para agregar órdenes a este vehículo");
+      }
+
+      // Insertar la orden de trabajo
       const { data, error } = await supabase
         .from('work_orders')
         .insert([
           {
             vehicle_id: vehicleId,
             description: formData.description,
-            status: "pending", // Estado inicial
+            status: "pending",
             total_cost: formData.totalCost ? parseFloat(formData.totalCost) : null,
           }
         ])
