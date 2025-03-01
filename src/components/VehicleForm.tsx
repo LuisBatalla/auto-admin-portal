@@ -26,6 +26,7 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!user) {
       toast({
         variant: "destructive",
@@ -36,9 +37,10 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
     }
     
     setIsLoading(true);
+    console.log("Intentando agregar vehículo con owner_id:", user.id);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('vehicles')
         .insert([
           {
@@ -48,10 +50,16 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
             year: formData.year ? parseInt(formData.year) : null,
             owner_id: user.id,
           }
-        ]);
+        ])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error al insertar vehículo:", error);
+        throw error;
+      }
 
+      console.log("Vehículo agregado exitosamente:", data);
+      
       toast({
         title: "Vehículo agregado",
         description: "El vehículo ha sido registrado exitosamente",
@@ -59,10 +67,11 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
       onSuccess();
       onClose();
     } catch (error: any) {
+      console.error("Error completo:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo agregar el vehículo. " + error.message,
+        description: `No se pudo agregar el vehículo: ${error.message || 'Error desconocido'}`,
       });
     } finally {
       setIsLoading(false);
