@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { VehicleForm } from "@/components/VehicleForm";
+import { VehicleDetails } from "@/components/VehicleDetails";
 
 interface Vehicle {
   id: string;
@@ -47,6 +48,7 @@ interface WorkOrder {
 const Index = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -171,10 +173,62 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
 
+  const handleViewVehicleDetails = (vehicleId: string) => {
+    setSelectedVehicleId(vehicleId);
+  };
+
+  const getVehicleStatus = (vehicleId: string) => {
+    const vehicleOrders = workOrders.filter(order => order.vehicle_id === vehicleId);
+    
+    if (vehicleOrders.length === 0) return 'Sin órdenes';
+    
+    // Buscar órdenes en progreso primero
+    const inProgressOrder = vehicleOrders.find(order => order.status === 'in_progress');
+    if (inProgressOrder) return 'En progreso';
+    
+    // Luego buscar órdenes pendientes
+    const pendingOrder = vehicleOrders.find(order => order.status === 'pending');
+    if (pendingOrder) return 'Pendiente';
+    
+    // Si no hay pendientes ni en progreso, buscar completadas
+    const completedOrder = vehicleOrders.find(order => order.status === 'completed');
+    if (completedOrder) return 'Completado';
+    
+    // Si no hay ninguna de las anteriores
+    return 'Sin estado';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pendiente':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'En progreso':
+        return 'bg-blue-100 text-blue-800';
+      case 'Completado':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-500';
+    }
+  };
+
   if (isLoadingVehicles || isLoadingOrders) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Si hay un vehículo seleccionado, mostrar sus detalles
+  if (selectedVehicleId) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <VehicleDetails
+            vehicleId={selectedVehicleId}
+            onBack={() => setSelectedVehicleId(null)}
+          />
+        </div>
       </div>
     );
   }
@@ -284,15 +338,18 @@ const Index = () => {
                       <p className="text-sm text-gray-500">Año: {vehicle.year}</p>
                     )}
                   </div>
-                  <span className="px-3 py-1 rounded-full text-sm bg-primary/10 text-primary">
-                    {workOrders.find(order => order.vehicle_id === vehicle.id)?.status || 'Sin órdenes'}
+                  <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(getVehicleStatus(vehicle.id))}`}>
+                    {getVehicleStatus(vehicle.id)}
                   </span>
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewVehicleDetails(vehicle.id)}
+                  >
                     Ver Detalles
                   </Button>
-                  <Button size="sm">Actualizar</Button>
                 </div>
               </Card>
             </motion.div>

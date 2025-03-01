@@ -68,11 +68,21 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
       onClose();
     } catch (error: any) {
       console.error("Error completo:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `No se pudo agregar el vehículo: ${error.message || 'Error desconocido'}`,
-      });
+      
+      // Manejo específico para errores comunes
+      if (error.code === '23505' && error.message.includes('plate')) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Ya existe un vehículo con esta placa en el sistema",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `No se pudo agregar el vehículo: ${error.message || 'Error desconocido'}`,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +137,11 @@ export const VehicleForm = ({ onClose, onSuccess }: VehicleFormProps) => {
             onChange={(e) =>
               setFormData({ ...formData, plate: e.target.value })
             }
+            placeholder="Ejemplo: ABC123"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            La placa se convertirá automáticamente a mayúsculas
+          </p>
         </div>
         <div>
           <label htmlFor="year" className="block text-sm font-medium mb-1">
