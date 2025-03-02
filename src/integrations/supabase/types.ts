@@ -109,6 +109,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_work_order: {
+        Args: {
+          p_vehicle_id: string
+          p_description: string
+          p_total_cost?: number
+        }
+        Returns: string
+      }
       get_auth_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
