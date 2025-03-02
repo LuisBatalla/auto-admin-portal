@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ interface WorkOrderFormProps {
 export const WorkOrderForm = ({ vehicleId, onClose, onSuccess }: WorkOrderFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     description: "",
     totalCost: "",
@@ -37,25 +38,18 @@ export const WorkOrderForm = ({ vehicleId, onClose, onSuccess }: WorkOrderFormPr
     
     setIsLoading(true);
     console.log("Intentando agregar orden para el vehículo:", vehicleId);
-    console.log("Usuario actual:", user?.id, "Es admin:", isAdmin);
 
     try {
-      // Insertar la orden de trabajo directamente
-      // Las políticas RLS ya validarán si el usuario tiene permiso para este vehículo
-      const { data, error } = await supabase
-        .from('work_orders')
-        .insert([
-          {
-            vehicle_id: vehicleId,
-            description: formData.description,
-            status: "pending",
-            total_cost: formData.totalCost ? parseFloat(formData.totalCost) : null,
-          }
-        ])
-        .select();
+      // Crear la orden de trabajo con los privilegios del servidor
+      // usando una función rpc en lugar de insertar directamente
+      const { data, error } = await supabase.rpc('create_work_order', {
+        p_vehicle_id: vehicleId,
+        p_description: formData.description,
+        p_total_cost: formData.totalCost ? parseFloat(formData.totalCost) : null
+      });
 
       if (error) {
-        console.error("Error al insertar orden de trabajo:", error);
+        console.error("Error al crear orden de trabajo:", error);
         throw error;
       }
 

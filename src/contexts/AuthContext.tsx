@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkUserRole = async (userId: string) => {
     try {
-      // Llamar a la función security definer para obtener el rol sin recursión
+      // Usar la función más simple solo para obtener el rol
       const { data, error } = await supabase.rpc('get_user_role_securely', {
         user_uuid: userId,
       });
@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      console.log('Rol obtenido:', data);
       setUserRole(data);
       setIsAdmin(data === 'admin');
     } catch (error) {
@@ -58,6 +59,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (currentUser) {
         checkUserRole(currentUser.id);
+      } else {
+        setUserRole(null);
+        setIsAdmin(false);
       }
 
       setLoading(false);
@@ -82,6 +86,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  console.log('Estado de autenticación:', { user, isAdmin, userRole });
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdmin, userRole }}>
