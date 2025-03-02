@@ -111,13 +111,12 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from("work_orders")
-        .update({
-          status: newStatus,
-          ...(newStatus === "completed" ? { completed_at: new Date().toISOString() } : {})
-        })
-        .eq("id", orderId);
+      // Instead of directly updating the work_orders table,
+      // use an RPC call to a function that will handle the permissions check
+      const { data, error } = await supabase.rpc('update_work_order_status', {
+        p_order_id: orderId,
+        p_status: newStatus
+      });
 
       if (error) throw error;
       
