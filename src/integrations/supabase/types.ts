@@ -119,9 +119,21 @@ export type Database = {
         }
         Returns: string
       }
+      get_user_role_securely: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: string
+      }
       get_user_vehicles: {
         Args: Record<PropertyKey, never>
         Returns: string[]
+      }
+      is_admin: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

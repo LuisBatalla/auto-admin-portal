@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -46,10 +45,9 @@ interface WorkOrder {
 }
 
 const Index = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, isAdmin, userRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -114,26 +112,7 @@ const Index = () => {
     },
   ];
 
-  useEffect(() => {
-    const checkAdminRole = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user?.id)
-          .single();
-        
-        if (error) throw error;
-        setIsAdmin(data?.role === 'admin');
-      } catch (error: any) {
-        console.error('Error checking admin role:', error.message);
-      }
-    };
-
-    if (user) {
-      checkAdminRole();
-    }
-  }, [user]);
+  console.log("Estado de autenticación:", { user, isAdmin, userRole });
 
   const handleLogout = async () => {
     try {
@@ -219,7 +198,6 @@ const Index = () => {
     );
   }
 
-  // Si hay un vehículo seleccionado, mostrar sus detalles
   if (selectedVehicleId) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">

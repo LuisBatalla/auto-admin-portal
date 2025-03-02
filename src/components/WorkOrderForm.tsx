@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,7 @@ interface WorkOrderFormProps {
 export const WorkOrderForm = ({ vehicleId, onClose, onSuccess }: WorkOrderFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [formData, setFormData] = useState({
     description: "",
     totalCost: "",
@@ -38,6 +37,7 @@ export const WorkOrderForm = ({ vehicleId, onClose, onSuccess }: WorkOrderFormPr
     
     setIsLoading(true);
     console.log("Intentando agregar orden para el vehículo:", vehicleId);
+    console.log("Usuario actual:", user?.id, "Es admin:", isAdmin);
 
     try {
       // Insertar la orden de trabajo directamente

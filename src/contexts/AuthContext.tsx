@@ -6,9 +6,16 @@ import { supabase } from "@/lib/supabase";
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
+  userRole: string | null;
 };
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ 
+  user: null, 
+  loading: true, 
+  isAdmin: false,
+  userRole: null 
+});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -21,11 +28,38 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  const checkUserRole = async (userId: string) => {
+    try {
+      // Llamar a la función security definer para obtener el rol sin recursión
+      const { data, error } = await supabase.rpc('get_user_role_securely', {
+        user_uuid: userId,
+      });
+
+      if (error) {
+        console.error('Error al obtener rol del usuario:', error);
+        return;
+      }
+
+      setUserRole(data);
+      setIsAdmin(data === 'admin');
+    } catch (error) {
+      console.error('Error al verificar roles:', error);
+    }
+  };
 
   useEffect(() => {
     // Verificar sesión actual
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        checkUserRole(currentUser.id);
+      }
+
       setLoading(false);
     });
 
@@ -33,7 +67,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        checkUserRole(currentUser.id);
+      } else {
+        setUserRole(null);
+        setIsAdmin(false);
+      }
+
       setLoading(false);
     });
 
@@ -41,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, userRole }}>
       {!loading && children}
     </AuthContext.Provider>
   );
