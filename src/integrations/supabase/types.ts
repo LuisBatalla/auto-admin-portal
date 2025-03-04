@@ -143,6 +143,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_work_order_status: {
+        Args: {
+          p_order_id: string
+          p_status: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "user"

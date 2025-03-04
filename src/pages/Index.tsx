@@ -1,16 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  CarFront,
-  Wrench,
-  FileText,
-  UserCircle,
-  Plus,
-  LogOut,
-  Shield,
-} from "lucide-react";
+import { Plus, LogOut, Shield, UserCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -24,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { VehicleForm } from "@/components/VehicleForm";
 import { VehicleDetails } from "@/components/VehicleDetails";
+import { StatsSummary } from "@/components/dashboard/StatsSummary";
+import { VehicleCard } from "@/components/vehicle/VehicleCard";
 
 interface Vehicle {
   id: string;
@@ -41,13 +34,12 @@ interface WorkOrder {
   total_cost: number | null;
   created_at: string;
   completed_at: string | null;
-  updated_at: string | null;
 }
 
 const Index = () => {
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const { user, isAdmin, userRole } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -84,96 +76,20 @@ const Index = () => {
     },
   });
 
-  const stats = [
-    { 
-      title: "Vehículos Activos", 
-      value: vehicles.length.toString(), 
-      icon: CarFront 
-    },
-    { 
-      title: "Órdenes Pendientes", 
-      value: workOrders.filter(order => order.status === 'pending').length.toString(), 
-      icon: Wrench 
-    },
-    { 
-      title: "Facturas del Mes", 
-      value: workOrders.filter(order => {
-        const orderDate = new Date(order.created_at);
-        const currentDate = new Date();
-        return orderDate.getMonth() === currentDate.getMonth() &&
-               orderDate.getFullYear() === currentDate.getFullYear();
-      }).length.toString(), 
-      icon: FileText 
-    },
-    { 
-      title: "Total Facturado", 
-      value: `$${workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0).toFixed(2)}`, 
-      icon: UserCircle 
-    },
-  ];
-
-  console.log("Estado de autenticación:", { user, isAdmin, userRole });
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error during logout:', error);
-        toast({
-          variant: "destructive",
-          title: "Error al cerrar sesión",
-          description: error.message,
-        });
-        return;
-      }
-      
-      toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión exitosamente",
-      });
-      setTimeout(() => {
-        navigate("/login");
-      }, 100);
-    } catch (error: any) {
-      console.error('Error durante el cierre de sesión:', error);
-      toast({
-        variant: "destructive",
-        title: "Error al cerrar sesión",
-        description: error.message,
-      });
-    }
-  };
-
-  const handleAddVehicle = () => {
-    setShowVehicleForm(true);
-  };
-
-  const handleVehicleAdded = () => {
-    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-  };
-
-  const handleViewVehicleDetails = (vehicleId: string) => {
-    setSelectedVehicleId(vehicleId);
-  };
-
   const getVehicleStatus = (vehicleId: string) => {
     const vehicleOrders = workOrders.filter(order => order.vehicle_id === vehicleId);
     
     if (vehicleOrders.length === 0) return 'Sin órdenes';
     
-    // Buscar órdenes en progreso primero
     const inProgressOrder = vehicleOrders.find(order => order.status === 'in_progress');
     if (inProgressOrder) return 'En progreso';
     
-    // Luego buscar órdenes pendientes
     const pendingOrder = vehicleOrders.find(order => order.status === 'pending');
     if (pendingOrder) return 'Pendiente';
     
-    // Si no hay pendientes ni en progreso, buscar completadas
     const completedOrder = vehicleOrders.find(order => order.status === 'completed');
     if (completedOrder) return 'Completado';
     
-    // Si no hay ninguna de las anteriores
     return 'Sin estado';
   };
 
@@ -210,6 +126,15 @@ const Index = () => {
       </div>
     );
   }
+
+  const pendingOrders = workOrders.filter(order => order.status === 'pending').length;
+  const monthlyInvoices = workOrders.filter(order => {
+    const orderDate = new Date(order.created_at);
+    const currentDate = new Date();
+    return orderDate.getMonth() === currentDate.getMonth() &&
+           orderDate.getFullYear() === currentDate.getFullYear();
+  }).length;
+  const totalBilled = workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -250,30 +175,12 @@ const Index = () => {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <Card className="p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <stat.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stat.value}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        <StatsSummary
+          vehicles={vehicles.length}
+          pendingOrders={pendingOrders}
+          monthlyInvoices={monthlyInvoices}
+          totalBilled={totalBilled}
+        />
 
         <div className="mb-8 flex justify-between items-center">
           <h2 className="text-2xl font-semibold text-gray-900">
@@ -281,7 +188,7 @@ const Index = () => {
           </h2>
           <Button 
             className="flex items-center space-x-2"
-            onClick={handleAddVehicle}
+            onClick={() => setShowVehicleForm(true)}
           >
             <Plus className="h-4 w-4" />
             <span>Nuevo Vehículo</span>
@@ -299,38 +206,14 @@ const Index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicles.map((vehicle, index) => (
-            <motion.div
+            <VehicleCard
               key={vehicle.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <Card className="p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">
-                      {vehicle.brand} {vehicle.model}
-                    </h3>
-                    <p className="text-gray-600">{vehicle.plate}</p>
-                    {vehicle.year && (
-                      <p className="text-sm text-gray-500">Año: {vehicle.year}</p>
-                    )}
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(getVehicleStatus(vehicle.id))}`}>
-                    {getVehicleStatus(vehicle.id)}
-                  </span>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleViewVehicleDetails(vehicle.id)}
-                  >
-                    Ver Detalles
-                  </Button>
-                </div>
-              </Card>
-            </motion.div>
+              vehicle={vehicle}
+              status={getVehicleStatus(vehicle.id)}
+              statusColor={getStatusColor(getVehicleStatus(vehicle.id))}
+              index={index}
+              onViewDetails={handleViewVehicleDetails}
+            />
           ))}
         </div>
       </motion.div>
