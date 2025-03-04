@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, Archive } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -17,9 +17,16 @@ interface WorkOrderCardProps {
     completed_at: string | null;
   };
   onStatusUpdate: () => void;
+  onArchiveVehicle?: (vehicleId: string) => void;
+  showArchiveButton?: boolean;
 }
 
-export const WorkOrderCard = ({ order, onStatusUpdate }: WorkOrderCardProps) => {
+export const WorkOrderCard = ({ 
+  order, 
+  onStatusUpdate, 
+  onArchiveVehicle,
+  showArchiveButton = false
+}: WorkOrderCardProps) => {
   const { toast } = useToast();
 
   const getStatusColor = (status: string) => {
@@ -70,6 +77,12 @@ export const WorkOrderCard = ({ order, onStatusUpdate }: WorkOrderCardProps) => 
     }
   };
 
+  const handleArchiveVehicle = () => {
+    if (onArchiveVehicle) {
+      onArchiveVehicle(order.vehicle_id);
+    }
+  };
+
   return (
     <Card key={order.id} className="overflow-hidden">
       <div className="p-4 border-b">
@@ -99,32 +112,53 @@ export const WorkOrderCard = ({ order, onStatusUpdate }: WorkOrderCardProps) => 
           </div>
         )}
 
-        <div className="flex justify-end space-x-2 mt-4">
-          {order.status === "pending" && (
-            <>
+        {order.completed_at && (
+          <div className="mb-4">
+            <p className="font-medium">Completado el:</p>
+            <p className="text-gray-700">{formatDate(order.completed_at)}</p>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center mt-4">
+          <div className="flex space-x-2">
+            {order.status === "pending" && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => updateOrderStatus(order.id, "in_progress")}
+                >
+                  Iniciar Trabajo
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => updateOrderStatus(order.id, "cancelled")}
+                >
+                  Cancelar
+                </Button>
+              </>
+            )}
+            {order.status === "in_progress" && (
               <Button 
-                variant="outline" 
+                variant="default" 
                 size="sm"
-                onClick={() => updateOrderStatus(order.id, "in_progress")}
+                onClick={() => updateOrderStatus(order.id, "completed")}
               >
-                Iniciar Trabajo
+                Marcar como Completado
               </Button>
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={() => updateOrderStatus(order.id, "cancelled")}
-              >
-                Cancelar
-              </Button>
-            </>
-          )}
-          {order.status === "in_progress" && (
-            <Button 
-              variant="default" 
+            )}
+          </div>
+          
+          {showArchiveButton && order.status === "completed" && (
+            <Button
+              variant="outline"
               size="sm"
-              onClick={() => updateOrderStatus(order.id, "completed")}
+              onClick={handleArchiveVehicle}
+              className="flex items-center"
             >
-              Marcar como Completado
+              <Archive className="h-4 w-4 mr-1" />
+              Archivar Vehículo
             </Button>
           )}
         </div>

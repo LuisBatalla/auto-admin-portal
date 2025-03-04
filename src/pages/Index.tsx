@@ -18,6 +18,7 @@ import { VehicleForm } from "@/components/VehicleForm";
 import { VehicleDetails } from "@/components/VehicleDetails";
 import { StatsSummary } from "@/components/dashboard/StatsSummary";
 import { VehicleCard } from "@/components/vehicle/VehicleCard";
+import { ArchivedVehicleToggle } from "@/components/vehicle/ArchivedVehicleToggle";
 
 interface Vehicle {
   id: string;
@@ -25,6 +26,7 @@ interface Vehicle {
   model: string;
   plate: string;
   year: number | null;
+  archived?: boolean;
 }
 
 interface WorkOrder {
@@ -40,6 +42,7 @@ interface WorkOrder {
 const Index = () => {
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -141,6 +144,46 @@ const Index = () => {
     }
   };
 
+  // Filtrar vehículos según estado de archivo
+  const filteredVehicles = vehicles.filter(vehicle => {
+    if (showArchived) {
+      return vehicle.archived === true;
+    } else {
+      // Si archived es undefined (vehículos antiguos) o false, mostrarlos como no archivados
+      return vehicle.archived !== true;
+    }
+  });
+
+  // Calculate detailed stats
+  const activeVehicles = vehicles.filter(v => v.archived !== true).length;
+  const pendingOrders = workOrders.filter(order => order.status === 'pending').length;
+  
+  // Calculate monthly stats
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  const monthlyOrders = workOrders.filter(order => {
+    const orderDate = new Date(order.created_at);
+    return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+  });
+  
+  const monthlyInvoices = monthlyOrders.length;
+  
+  // Calculate total billed
+  const totalBilled = workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
+  
+  // Calculate monthly billed
+  const monthlyBilled = monthlyOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
+
+  // Calculate stats by status
+  const ordersByStatus = {
+    pending: workOrders.filter(order => order.status === 'pending').length,
+    inProgress: workOrders.filter(order => order.status === 'in_progress').length,
+    completed: workOrders.filter(order => order.status === 'completed').length,
+    cancelled: workOrders.filter(order => order.status === 'cancelled').length
+  };
+
   if (isLoadingVehicles || isLoadingOrders) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -161,15 +204,6 @@ const Index = () => {
       </div>
     );
   }
-
-  const pendingOrders = workOrders.filter(order => order.status === 'pending').length;
-  const monthlyInvoices = workOrders.filter(order => {
-    const orderDate = new Date(order.created_at);
-    const currentDate = new Date();
-    return orderDate.getMonth() === currentDate.getMonth() &&
-           orderDate.getFullYear() === currentDate.getFullYear();
-  }).length;
-  const totalBilled = workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -211,23 +245,34 @@ const Index = () => {
         </header>
 
         <StatsSummary
-          vehicles={vehicles.length}
+          vehicles={activeVehicles}
           pendingOrders={pendingOrders}
           monthlyInvoices={monthlyInvoices}
           totalBilled={totalBilled}
+          monthlyBilled={monthlyBilled}
+          ordersByStatus={ordersByStatus}
         />
 
         <div className="mb-8 flex justify-between items-center">
           <h2 className="text-2xl font-semibold text-gray-900">
-            Vehículos en Taller
+            {showArchived ? 'Vehículos Archivados' : 'Vehículos en Taller'}
           </h2>
-          <Button 
-            className="flex items-center space-x-2"
-            onClick={() => setShowVehicleForm(true)}
-          >
-            <Plus className="h-4 w-4" />
-            <span>Nuevo Vehículo</span>
-          </Button>
+          <div className="flex space-x-2">
+            <ArchivedVehicleToggle 
+              showArchived={showArchived} 
+              onToggle={() => setShowArchived(!showArchived)} 
+            />
+            
+            {!showArchived && (
+              <Button 
+                className="flex items-center space-x-2"
+                onClick={() => setShowVehicleForm(true)}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nuevo Vehículo</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {showVehicleForm && (
@@ -239,18 +284,28 @@ const Index = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vehicles.map((vehicle, index) => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              status={getVehicleStatus(vehicle.id)}
-              statusColor={getStatusColor(getVehicleStatus(vehicle.id))}
-              index={index}
-              onViewDetails={handleViewVehicleDetails}
-            />
-          ))}
-        </div>
+        {filteredVehicles.length === 0 ? (
+          <div className="text-center p-6 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-gray-500">
+              {showArchived 
+                ? "No hay vehículos archivados" 
+                : "No hay vehículos activos en el taller"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVehicles.map((vehicle, index) => (
+              <VehicleCard
+                key={vehicle.id}
+                vehicle={vehicle}
+                status={getVehicleStatus(vehicle.id)}
+                statusColor={getStatusColor(getVehicleStatus(vehicle.id))}
+                index={index}
+                onViewDetails={handleViewVehicleDetails}
+              />
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );

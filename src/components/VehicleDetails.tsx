@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Archive, ArchiveRestore } from "lucide-react";
 import { WorkOrderForm } from "./WorkOrderForm";
 import { VehicleInfo } from "./vehicle/VehicleInfo";
 import { WorkOrderList } from "./workorder/WorkOrderList";
@@ -20,6 +20,7 @@ interface Vehicle {
   model: string;
   plate: string;
   year: number | null;
+  archived?: boolean;
   status?: string;
 }
 
@@ -87,6 +88,38 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
     });
   };
 
+  const toggleArchiveStatus = async () => {
+    if (!vehicle) return;
+    
+    try {
+      const newArchivedStatus = !vehicle.archived;
+      
+      const { error } = await supabase
+        .from('vehicles')
+        .update({ archived: newArchivedStatus })
+        .eq('id', vehicle.id);
+        
+      if (error) throw error;
+      
+      setVehicle({ ...vehicle, archived: newArchivedStatus });
+      toast({
+        title: newArchivedStatus ? "Vehículo archivado" : "Vehículo restaurado",
+        description: newArchivedStatus 
+          ? "El vehículo ha sido archivado correctamente" 
+          : "El vehículo ha sido restaurado correctamente",
+      });
+    } catch (error: any) {
+      console.error("Error al cambiar estado de archivo:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `No se pudo cambiar el estado: ${error.message || "Error desconocido"}`,
+      });
+    }
+  };
+
+  const hasCompletedOrders = workOrders.some(order => order.status === "completed");
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -108,10 +141,33 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
 
   return (
     <div className="space-y-6">
-      <VehicleDetailsHeader
-        onBack={onBack}
-        onNewOrder={() => setShowOrderForm(true)}
-      />
+      <div className="flex justify-between items-center">
+        <VehicleDetailsHeader
+          onBack={onBack}
+          onNewOrder={() => setShowOrderForm(true)}
+        />
+        
+        {hasCompletedOrders && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleArchiveStatus}
+            className="flex items-center gap-2"
+          >
+            {vehicle.archived ? (
+              <>
+                <ArchiveRestore className="h-4 w-4" />
+                <span>Restaurar</span>
+              </>
+            ) : (
+              <>
+                <Archive className="h-4 w-4" />
+                <span>Archivar</span>
+              </>
+            )}
+          </Button>
+        )}
+      </div>
 
       {showOrderForm && (
         <WorkOrderForm
@@ -127,7 +183,9 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
         <h3 className="text-xl font-semibold mb-4">Órdenes de Trabajo</h3>
         <WorkOrderList 
           workOrders={workOrders} 
-          onStatusUpdate={fetchVehicleDetails} 
+          onStatusUpdate={fetchVehicleDetails}
+          onArchiveVehicle={toggleArchiveStatus}
+          showArchiveButton={!vehicle.archived && hasCompletedOrders}
         />
       </div>
     </div>
