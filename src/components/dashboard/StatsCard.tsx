@@ -8,9 +8,10 @@ interface StatCardProps {
   value: string;
   icon: LucideIcon;
   index: number;
+  description: string;
 }
 
-export const StatCard = ({ title, value, icon: Icon, index }: StatCardProps) => {
+export const StatCard = ({ title, value, icon: Icon, index, description }: StatCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -27,6 +28,7 @@ export const StatCard = ({ title, value, icon: Icon, index }: StatCardProps) => 
             <p className="text-2xl font-bold text-gray-900">
               {value}
             </p>
+            <p className="text-xs text-gray-500 mt-1">{description}</p>
           </div>
         </div>
       </Card>
