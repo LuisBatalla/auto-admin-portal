@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,40 @@ const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Función para manejar el cierre de sesión
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
+      });
+      navigate("/login");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo cerrar sesión",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Función para manejar la adición de un nuevo vehículo
+  const handleVehicleAdded = () => {
+    setShowVehicleForm(false);
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    toast({
+      title: "Vehículo agregado",
+      description: "El vehículo ha sido agregado correctamente",
+    });
+  };
+
+  // Función para ver detalles de un vehículo
+  const handleViewVehicleDetails = (id: string) => {
+    setSelectedVehicleId(id);
+  };
 
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['vehicles'],
