@@ -1,8 +1,6 @@
 
 import { StatCard } from "./StatsCard";
-import { CarFront, Wrench, FileText, UserCircle } from "luc
-
-ide-react";
+import { CarFront, Wrench, FileText, UserCircle } from "lucide-react";
 
 interface StatsSummaryProps {
   vehicles: number;
