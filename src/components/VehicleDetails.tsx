@@ -108,6 +108,11 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
           ? "El vehículo ha sido archivado correctamente" 
           : "El vehículo ha sido restaurado correctamente",
       });
+
+      // Si se archiva el vehículo, regresamos a la pantalla principal
+      if (newArchivedStatus) {
+        onBack();
+      }
     } catch (error: any) {
       console.error("Error al cambiar estado de archivo:", error);
       toast({
