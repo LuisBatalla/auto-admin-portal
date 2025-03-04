@@ -32,6 +32,7 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          archived: boolean | null
           brand: string
           created_at: string | null
           id: string
@@ -42,6 +43,7 @@ export type Database = {
           year: number | null
         }
         Insert: {
+          archived?: boolean | null
           brand: string
           created_at?: string | null
           id?: string
@@ -52,6 +54,7 @@ export type Database = {
           year?: number | null
         }
         Update: {
+          archived?: boolean | null
           brand?: string
           created_at?: string | null
           id?: string

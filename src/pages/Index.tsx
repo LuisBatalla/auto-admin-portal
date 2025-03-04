@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,6 @@ const Index = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Función para manejar el cierre de sesión
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -67,7 +65,6 @@ const Index = () => {
     }
   };
 
-  // Función para manejar la adición de un nuevo vehículo
   const handleVehicleAdded = () => {
     setShowVehicleForm(false);
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
@@ -77,7 +74,6 @@ const Index = () => {
     });
   };
 
-  // Función para ver detalles de un vehículo
   const handleViewVehicleDetails = (id: string) => {
     setSelectedVehicleId(id);
   };
@@ -144,21 +140,17 @@ const Index = () => {
     }
   };
 
-  // Filtrar vehículos según estado de archivo
   const filteredVehicles = vehicles.filter(vehicle => {
     if (showArchived) {
       return vehicle.archived === true;
     } else {
-      // Si archived es undefined (vehículos antiguos) o false, mostrarlos como no archivados
       return vehicle.archived !== true;
     }
   });
 
-  // Calculate detailed stats
   const activeVehicles = vehicles.filter(v => v.archived !== true).length;
   const pendingOrders = workOrders.filter(order => order.status === 'pending').length;
   
-  // Calculate monthly stats
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -170,13 +162,10 @@ const Index = () => {
   
   const monthlyInvoices = monthlyOrders.length;
   
-  // Calculate total billed
   const totalBilled = workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
   
-  // Calculate monthly billed
   const monthlyBilled = monthlyOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
 
-  // Calculate stats by status
   const ordersByStatus = {
     pending: workOrders.filter(order => order.status === 'pending').length,
     inProgress: workOrders.filter(order => order.status === 'in_progress').length,

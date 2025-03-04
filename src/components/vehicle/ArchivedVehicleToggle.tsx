@@ -1,7 +1,7 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Archive, Eye } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ArchivedVehicleToggleProps {
   showArchived: boolean;
@@ -13,23 +13,29 @@ export const ArchivedVehicleToggle = ({
   onToggle 
 }: ArchivedVehicleToggleProps) => {
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onToggle}
-      className="flex items-center gap-2"
+    <motion.div
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
     >
-      {showArchived ? (
-        <>
-          <Eye className="h-4 w-4" />
-          <span>Ver Activos</span>
-        </>
-      ) : (
-        <>
-          <Archive className="h-4 w-4" />
-          <span>Ver Archivados</span>
-        </>
-      )}
-    </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onToggle}
+        className="flex items-center gap-2"
+      >
+        {showArchived ? (
+          <>
+            <Eye className="h-4 w-4" />
+            <span>Ver Activos</span>
+          </>
+        ) : (
+          <>
+            <Archive className="h-4 w-4" />
+            <span>Ver Archivados</span>
+          </>
+        )}
+      </Button>
+    </motion.div>
   );
 };
