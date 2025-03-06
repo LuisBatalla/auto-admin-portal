@@ -1,8 +1,7 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut, Shield, UserCircle } from "lucide-react";
+import { Plus, LogOut, Shield, UserCircle, FileDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +18,7 @@ import { VehicleDetails } from "@/components/VehicleDetails";
 import { StatsSummary } from "@/components/dashboard/StatsSummary";
 import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { ArchivedVehicleToggle } from "@/components/vehicle/ArchivedVehicleToggle";
+import { ExportData } from "@/components/export/ExportData";
 
 interface Vehicle {
   id: string;
@@ -43,6 +43,7 @@ const Index = () => {
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -141,16 +142,14 @@ const Index = () => {
     }
   };
 
-  // Filtrar vehículos activos/archivados
   const filteredVehicles = vehicles.filter(vehicle => {
     if (showArchived) {
-      return vehicle.archived === true;
+      return Boolean(vehicle.archived) === true;
     } else {
-      return vehicle.archived !== true;
+      return Boolean(vehicle.archived) !== true;
     }
   });
 
-  // Calcular estadísticas para el dashboard
   const activeVehicles = vehicles.filter(v => v.archived !== true).length;
   const pendingOrders = workOrders.filter(order => order.status === 'pending').length;
   
@@ -158,22 +157,17 @@ const Index = () => {
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
   
-  // Filtrar órdenes del mes actual
   const monthlyOrders = workOrders.filter(order => {
     const orderDate = new Date(order.created_at);
     return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
   });
   
-  // Contar facturas del mes (consideramos una orden como factura)
   const monthlyInvoices = monthlyOrders.length;
   
-  // Total facturado (suma de total_cost de todas las órdenes)
   const totalBilled = workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
   
-  // Total facturado este mes
   const monthlyBilled = monthlyOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
 
-  // Órdenes por estado para estadísticas más detalladas
   const ordersByStatus = {
     pending: workOrders.filter(order => order.status === 'pending').length,
     inProgress: workOrders.filter(order => order.status === 'in_progress').length,
@@ -195,7 +189,10 @@ const Index = () => {
         <div className="max-w-7xl mx-auto">
           <VehicleDetails
             vehicleId={selectedVehicleId}
-            onBack={() => setSelectedVehicleId(null)}
+            onBack={() => {
+              setSelectedVehicleId(null);
+              queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+            }}
           />
         </div>
       </div>
@@ -219,6 +216,15 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => setShowExportModal(true)}
+            >
+              <FileDown className="h-4 w-4" />
+              Exportar Datos
+            </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
@@ -271,6 +277,14 @@ const Index = () => {
             )}
           </div>
         </div>
+
+        {showExportModal && (
+          <ExportData 
+            vehicles={vehicles} 
+            workOrders={workOrders} 
+            onClose={() => setShowExportModal(false)} 
+          />
+        )}
 
         {showVehicleForm && (
           <div className="mb-6">

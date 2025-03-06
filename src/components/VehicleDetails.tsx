@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -8,6 +7,7 @@ import { WorkOrderForm } from "./WorkOrderForm";
 import { VehicleInfo } from "./vehicle/VehicleInfo";
 import { WorkOrderList } from "./workorder/WorkOrderList";
 import { VehicleDetailsHeader } from "./vehicle/VehicleDetailsHeader";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface VehicleDetailsProps {
   vehicleId: string;
@@ -40,11 +40,11 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showOrderForm, setShowOrderForm] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const fetchVehicleDetails = async () => {
     setIsLoading(true);
     try {
-      // Fetch vehicle details
       const { data: vehicleData, error: vehicleError } = await supabase
         .from("vehicles")
         .select("*")
@@ -54,7 +54,6 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
       if (vehicleError) throw vehicleError;
       setVehicle(vehicleData);
 
-      // Fetch work orders for this vehicle
       const { data: ordersData, error: ordersError } = await supabase
         .from("work_orders")
         .select("*")
@@ -102,6 +101,9 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
       if (error) throw error;
       
       setVehicle({ ...vehicle, archived: newArchivedStatus });
+      
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      
       toast({
         title: newArchivedStatus ? "Vehículo archivado" : "Vehículo restaurado",
         description: newArchivedStatus 
@@ -109,7 +111,6 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
           : "El vehículo ha sido restaurado correctamente",
       });
 
-      // Si se archiva el vehículo, regresamos a la pantalla principal
       if (newArchivedStatus) {
         onBack();
       }
