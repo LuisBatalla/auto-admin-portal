@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { LogOut, Shield, UserCircle, FileDown } from "lucide-react";
+import { LogOut, Shield, UserCircle, FileDown, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,15 +8,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
 interface HeaderProps {
-  onShowExport: () => void;
+  onShowExport?: () => void;
+  showExportButton?: boolean;
 }
 
-export const Header = ({ onShowExport }: HeaderProps) => {
+export const Header = ({ onShowExport, showExportButton = true }: HeaderProps) => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -52,11 +53,24 @@ export const Header = ({ onShowExport }: HeaderProps) => {
         <Button 
           variant="outline" 
           className="flex items-center gap-2"
-          onClick={onShowExport}
+          asChild
         >
-          <FileDown className="h-4 w-4" />
-          Exportar Datos
+          <Link to="/invoices">
+            <FileText className="h-4 w-4" />
+            Facturas
+          </Link>
         </Button>
+        
+        {showExportButton && onShowExport && (
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={onShowExport}
+          >
+            <FileDown className="h-4 w-4" />
+            Exportar Datos
+          </Button>
+        )}
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
