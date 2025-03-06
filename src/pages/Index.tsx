@@ -141,6 +141,7 @@ const Index = () => {
     }
   };
 
+  // Filtrar vehículos activos/archivados
   const filteredVehicles = vehicles.filter(vehicle => {
     if (showArchived) {
       return vehicle.archived === true;
@@ -149,6 +150,7 @@ const Index = () => {
     }
   });
 
+  // Calcular estadísticas para el dashboard
   const activeVehicles = vehicles.filter(v => v.archived !== true).length;
   const pendingOrders = workOrders.filter(order => order.status === 'pending').length;
   
@@ -156,17 +158,22 @@ const Index = () => {
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
   
+  // Filtrar órdenes del mes actual
   const monthlyOrders = workOrders.filter(order => {
     const orderDate = new Date(order.created_at);
     return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
   });
   
+  // Contar facturas del mes (consideramos una orden como factura)
   const monthlyInvoices = monthlyOrders.length;
   
+  // Total facturado (suma de total_cost de todas las órdenes)
   const totalBilled = workOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
   
+  // Total facturado este mes
   const monthlyBilled = monthlyOrders.reduce((acc, order) => acc + (order.total_cost || 0), 0);
 
+  // Órdenes por estado para estadísticas más detalladas
   const ordersByStatus = {
     pending: workOrders.filter(order => order.status === 'pending').length,
     inProgress: workOrders.filter(order => order.status === 'in_progress').length,

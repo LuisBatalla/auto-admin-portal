@@ -1,6 +1,6 @@
 
 import { StatCard } from "./StatsCard";
-import { CarFront, Wrench, FileText, DollarSign, PieChart } from "lucide-react";
+import { CarFront, Wrench, FileText, DollarSign } from "lucide-react";
 
 interface OrdersByStatus {
   pending: number;
