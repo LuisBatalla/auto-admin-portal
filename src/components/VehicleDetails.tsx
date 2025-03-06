@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -102,6 +103,7 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
       
       setVehicle({ ...vehicle, archived: newArchivedStatus });
       
+      // Invalidate queries to refresh the vehicles list
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       
       toast({
@@ -111,9 +113,8 @@ export const VehicleDetails = ({ vehicleId, onBack }: VehicleDetailsProps) => {
           : "El vehículo ha sido restaurado correctamente",
       });
 
-      if (newArchivedStatus) {
-        onBack();
-      }
+      // Siempre volver a la pantalla principal después de archivar/restaurar
+      onBack();
     } catch (error: any) {
       console.error("Error al cambiar estado de archivo:", error);
       toast({
