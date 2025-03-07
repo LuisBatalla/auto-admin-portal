@@ -11,7 +11,7 @@ export interface Invoice {
   vehicleId: string;
   total: number;
   status: "active" | "archived";
-  month: string;
+  month: string; // Cambiado a string para coincidir con la interfaz
   year: number;
   date: string;
   vehicleBrand?: string;
@@ -56,7 +56,7 @@ export const useInvoiceData = () => {
         vehicleId: order.vehicle_id,
         total: order.total_cost || 0,
         status: order.status === 'completed' ? 'active' : 'archived',
-        month: new Date(order.created_at).getMonth() + 1,
+        month: String(new Date(order.created_at).getMonth() + 1), // Convertido a string
         year: new Date(order.created_at).getFullYear(),
         date: order.created_at,
         vehicleBrand: order.vehicles?.brand,
