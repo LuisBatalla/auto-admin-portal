@@ -12,7 +12,8 @@ import {
   CardTitle,
   CardDescription
 } from "@/components/ui/card";
-import { FileText, DollarSign, Archive } from "lucide-react";
+import { FileText, DollarSign, Archive, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Invoices = () => {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ const Invoices = () => {
     setSelectedMonth,
     showArchived,
     setShowArchived,
+    showCleanedData,
+    cleanData,
     formatMonthYear,
     getAvailableMonths,
     stats
@@ -102,6 +105,11 @@ const Invoices = () => {
                 <div className="text-2xl font-bold">
                   {stats.archivedCount}
                 </div>
+                {showCleanedData && (
+                  <Badge variant="outline" className="ml-2 bg-green-100 text-green-800">
+                    Datos Limpios
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -117,6 +125,8 @@ const Invoices = () => {
           formatMonthYear={formatMonthYear}
           availableMonths={getAvailableMonths()}
           onViewDetails={handleViewInvoiceDetails}
+          showCleanedData={showCleanedData}
+          onCleanData={cleanData}
         />
       </motion.div>
     </div>

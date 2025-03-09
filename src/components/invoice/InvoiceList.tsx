@@ -4,7 +4,7 @@ import { Invoice } from "@/hooks/use-invoice-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Archive, ArchiveRestore, CarFront, Calendar, FileText } from "lucide-react";
+import { Archive, ArchiveRestore, CarFront, Calendar, FileText, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { 
@@ -26,6 +26,8 @@ interface InvoiceListProps {
   formatMonthYear: (monthStr: string) => string;
   availableMonths: { value: string; label: string }[];
   onViewDetails?: (id: string) => void;
+  showCleanedData?: boolean;
+  onCleanData?: () => void;
 }
 
 export const InvoiceList = ({
@@ -37,7 +39,9 @@ export const InvoiceList = ({
   onToggleArchived,
   formatMonthYear,
   availableMonths,
-  onViewDetails
+  onViewDetails,
+  showCleanedData = false,
+  onCleanData
 }: InvoiceListProps) => {
   const { toast } = useToast();
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
@@ -121,6 +125,18 @@ export const InvoiceList = ({
               </>
             )}
           </Button>
+          
+          {onCleanData && (
+            <Button
+              variant={showCleanedData ? "default" : "outline"}
+              size="sm"
+              onClick={onCleanData}
+              className="whitespace-nowrap"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {showCleanedData ? "Datos Limpios" : "Limpiar Datos"}
+            </Button>
+          )}
         </div>
       </div>
 

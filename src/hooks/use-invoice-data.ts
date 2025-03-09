@@ -25,11 +25,12 @@ export const useInvoiceData = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [showArchived, setShowArchived] = useState(false);
+  const [showCleanedData, setShowCleanedData] = useState(false);
   const queryClient = useQueryClient();
 
   // Convertir work_orders en facturas
   const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ['invoices', selectedMonth, showArchived],
+    queryKey: ['invoices', selectedMonth, showArchived, showCleanedData],
     queryFn: async () => {
       const [year, month] = selectedMonth.split('-').map(Number);
       
@@ -50,7 +51,7 @@ export const useInvoiceData = () => {
       }
       
       // Convertir órdenes en facturas
-      const invoicesData: Invoice[] = workOrders.map(order => ({
+      let invoicesData: Invoice[] = workOrders.map(order => ({
         id: order.id,
         workOrderId: order.id,
         vehicleId: order.vehicle_id,
@@ -65,11 +66,27 @@ export const useInvoiceData = () => {
       }));
       
       // Filtrar por archivados si es necesario
-      return showArchived 
-        ? invoicesData
-        : invoicesData.filter(inv => inv.status === 'active');
+      if (!showArchived) {
+        invoicesData = invoicesData.filter(inv => inv.status === 'active');
+      }
+      
+      // Limpiar datos si está activado
+      if (showCleanedData) {
+        // Filtrar por trabajos completados y no archivados
+        invoicesData = invoicesData.filter(inv => 
+          inv.status === 'active' || (showArchived && inv.status === 'archived')
+        );
+      }
+      
+      return invoicesData;
     }
   });
+
+  const cleanData = () => {
+    setShowCleanedData(!showCleanedData);
+    // Invalidar consulta para recargar los datos
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  };
 
   // Calcular totales
   const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.total, 0);
@@ -105,6 +122,9 @@ export const useInvoiceData = () => {
     setSelectedMonth,
     showArchived,
     setShowArchived,
+    showCleanedData,
+    setShowCleanedData,
+    cleanData,
     formatMonthYear,
     getAvailableMonths,
     stats: {
