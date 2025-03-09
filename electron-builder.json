@@ -1,0 +1,23 @@
+
+{
+  "appId": "com.taller.app",
+  "productName": "Taller App",
+  "directories": {
+    "output": "release/"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*"
+  ],
+  "mac": {
+    "category": "public.app-category.business",
+    "target": ["dmg"]
+  },
+  "win": {
+    "target": ["portable", "nsis"]
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "category": "Office"
+  }
+}
