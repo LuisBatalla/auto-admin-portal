@@ -12,6 +12,7 @@ import {
   CardTitle,
   CardDescription
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { FileText, DollarSign, Archive, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
