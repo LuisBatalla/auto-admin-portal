@@ -16,4 +16,5 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Also add a default export for backward compatibility
 export default ProtectedRoute;
