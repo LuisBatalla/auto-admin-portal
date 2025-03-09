@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -78,7 +79,10 @@ export const useInvoiceData = () => {
       }
       
       return invoicesData;
-    }
+    },
+    networkMode: 'online', // Añadido para mejorar el funcionamiento en dispositivos móviles
+    staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar los datos obsoletos
+    retry: 3, // Intentar hasta 3 veces en caso de error de red
   });
 
   const cleanData = () => {
