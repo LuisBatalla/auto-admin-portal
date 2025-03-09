@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -88,10 +87,14 @@ export const useInvoiceData = () => {
     queryClient.invalidateQueries({ queryKey: ['invoices'] });
   };
 
-  // Calcular totales
-  const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.total, 0);
-  const completedCount = invoices.filter(inv => inv.status === 'active').length;
-  const archivedCount = invoices.filter(inv => inv.status === 'archived').length;
+  // Calcular totales basados en los filtros aplicados
+  let filteredInvoices = [...(invoices || [])];
+  
+  // Estas funciones de cálculo de stats ya tienen en cuenta el filtro aplicado
+  // porque se ejecutan sobre los datos ya filtrados en la consulta de React Query
+  const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+  const completedCount = filteredInvoices.filter(inv => inv.status === 'active').length;
+  const archivedCount = filteredInvoices.filter(inv => inv.status === 'archived').length;
 
   // Formatear la fecha actual para el título
   const formatMonthYear = (monthStr: string) => {

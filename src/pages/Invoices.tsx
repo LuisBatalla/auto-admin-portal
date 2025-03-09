@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useInvoiceData } from "@/hooks/use-invoice-data";
@@ -68,6 +67,11 @@ const Invoices = () => {
                 <div className="text-2xl font-bold">
                   {stats.completedCount + stats.archivedCount}
                 </div>
+                {showCleanedData && (
+                  <Badge variant="outline" className="ml-2 bg-green-100 text-green-800">
+                    Datos Limpios
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -87,6 +91,11 @@ const Invoices = () => {
                 <div className="text-2xl font-bold">
                   ${stats.totalAmount.toFixed(2)}
                 </div>
+                {showCleanedData && (
+                  <Badge variant="outline" className="ml-2 bg-green-100 text-green-800">
+                    Datos Limpios
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>
